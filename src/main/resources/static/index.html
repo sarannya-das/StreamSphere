@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamSphere - Music Streaming Platform</title>
+    <link rel="icon" type="image/png" href="./favicon.png">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SweetAlert2 for Professional Popups without port/localhost -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --bg-black: #0a0a0c;
+            --bg-card: #141418;
+            --bg-sidebar: #0f0f13;
+            --pink-primary: #ff1e73;
+            --pink-secondary: #ff5e9c;
+            --pink-glow: rgba(255, 30, 115, 0.4);
+            --text-white: #ffffff;
+            --text-muted: #9e9ea9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-black);
+            color: var(--text-white);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ================= FLOATING MUSIC SIGNS CANVAS ================= */
+        #music-canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .floating-note {
+            position: absolute;
+            bottom: -30px;
+            color: #ff3385;
+            text-shadow: 0 0 10px #ff1e73, 0 0 20px rgba(255, 30, 115, 0.6);
+            pointer-events: none;
+            user-select: none;
+            font-weight: bold;
+            opacity: 0;
+            animation: riseSlowly linear forwards;
+        }
+
+        @keyframes riseSlowly {
+            0% {
+                transform: translateY(0) translateX(0) rotate(0deg);
+                opacity: 0;
+            }
+            15% {
+                opacity: 0.9;
+            }
+            50% {
+                transform: translateY(-50vh) translateX(35px) rotate(15deg);
+                opacity: 0.95;
+            }
+            85% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-110vh) translateX(-25px) rotate(-15deg);
+                opacity: 0;
+            }
+        }
+
+        /* ================= 1. LOGIN SCREEN ================= */
+        #login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: radial-gradient(circle at center, #2b0617 0%, var(--bg-black) 80%);
+            position: relative;
+            z-index: 2;
+        }
+
+        .login-box {
+            background: rgba(20, 20, 24, 0.92);
+            padding: 42px 34px;
+            border-radius: 20px;
+            width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 25px var(--pink-glow);
+            border: 1px solid rgba(255, 30, 115, 0.35);
+            text-align: center;
+            backdrop-filter: blur(12px);
+        }
+
+        .login-box .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-white);
+            margin-bottom: 6px;
+        }
+
+        .login-box .logo span {
+            color: var(--pink-primary);
+        }
+
+        .login-box p {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 13px 15px;
+            background: #1e1e24;
+            border: 1px solid #2e2e38;
+            border-radius: 10px;
+            color: var(--text-white);
+            outline: none;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--pink-primary);
+            box-shadow: 0 0 8px var(--pink-glow);
+        }
+
+        .otp-inputs {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin: 20px 0 22px;
+        }
+
+        .otp-box {
+            width: 48px;
+            height: 52px;
+            background: #1e1e24;
+            border: 1px solid #2e2e38;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--pink-primary);
+            outline: none;
+            transition: 0.25s;
+        }
+
+        .otp-box:focus {
+            border-color: var(--pink-primary);
+            box-shadow: 0 0 10px var(--pink-glow);
+            transform: scale(1.05);
+        }
+
+        .btn-pink {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(45deg, var(--pink-primary), var(--pink-secondary));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-pink:hover {
+            box-shadow: 0 0 15px var(--pink-primary);
+            transform: translateY(-2px);
+        }
+
+        .btn-pink:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-link {
+            background: transparent;
+            border: none;
+            color: var(--pink-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 15px;
+            text-decoration: underline;
+        }
+
+        /* ================= 2. DASHBOARD ================= */
+        #app-screen {
+            display: none;
+            height: 100vh;
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 1fr 90px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .sidebar {
+            background: var(--bg-sidebar);
+            padding: 25px 20px;
+            border-right: 1px solid #1f1f27;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .brand {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 35px;
+        }
+
+        .brand span {
+            color: var(--pink-primary);
+        }
+
+        .nav-links {
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-bottom: 18px;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.3s;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--text-white);
+            background: rgba(255, 30, 115, 0.15);
+            border-left: 4px solid var(--pink-primary);
+        }
+
+        .main-content {
+            padding: 25px 35px;
+            overflow-y: auto;
+            background: linear-gradient(180deg, #250816 0%, var(--bg-black) 35%);
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .search-bar {
+            background: var(--bg-card);
+            padding: 10px 18px;
+            border-radius: 25px;
+            width: 350px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid #282832;
+        }
+
+        .search-bar input {
+            background: transparent;
+            border: none;
+            color: white;
+            outline: none;
+            width: 100%;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--pink-primary);
+        }
+
+        /* ================= CLEAN LIST-WISE SONG ROWS ================= */
+        .song-list-view {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 950px;
+            margin-bottom: 30px;
+        }
+
+        .song-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(20, 20, 24, 0.8);
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid #1f1f27;
+            transition: 0.2s ease;
+            cursor: pointer;
+        }
+
+        .song-row:hover {
+            background: #1c1c24;
+            border-color: rgba(255, 30, 115, 0.4);
+            transform: translateX(4px);
+        }
+
+        .song-row-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .song-index {
+            width: 28px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .song-row-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .song-meta {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .song-title-text {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-white);
+            margin-bottom: 3px;
+        }
+
+        .song-artist-text {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .song-row-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .trending-badge {
+            background: rgba(255, 30, 115, 0.15);
+            border: 1px solid var(--pink-primary);
+            color: var(--pink-primary);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .action-icon {
+            font-size: 17px;
+            color: var(--text-muted);
+            transition: 0.2s;
+            cursor: pointer;
+            padding: 6px;
+        }
+
+        .action-icon:hover {
+            color: var(--pink-primary);
+            transform: scale(1.15);
+        }
+
+        .action-icon.active {
+            color: var(--pink-primary);
+        }
+
+        /* Playlists Folder Grid */
+        .playlist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            max-width: 950px;
+        }
+
+        .playlist-card {
+            background: var(--bg-card);
+            border: 1px solid #23232d;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .playlist-card:hover {
+            border-color: var(--pink-primary);
+            transform: translateY(-4px);
+        }
+
+        .playlist-card i {
+            font-size: 45px;
+            color: var(--pink-primary);
+            margin-bottom: 12px;
+        }
+
+        /* ================= PLAYER BAR ================= */
+        .player-bar {
+            grid-column: 1 / -1;
+            background: #121217;
+            border-top: 1px solid #282832;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+        }
+
+        .now-playing {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 25%;
+        }
+
+        .now-playing img {
+            width: 55px;
+            height: 55px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--pink-primary);
+        }
+
+        .player-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 45%;
+        }
+
+        .control-buttons {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 8px;
+        }
+
+        .control-buttons i {
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-muted);
+            transition: 0.2s;
+        }
+
+        .control-buttons i:hover {
+            color: var(--text-white);
+        }
+
+        .control-buttons .play-main {
+            font-size: 32px;
+            color: var(--pink-primary);
+        }
+
+        .progress-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* YouTube Pink / Black Progress Bar */
+        .progress-bar {
+            flex: 1;
+            appearance: none;
+            height: 5px;
+            background: linear-gradient(to right, var(--pink-primary) 0%, #1e1e24 0%);
+            border-radius: 5px;
+            cursor: pointer;
+            outline: none;
+            transition: background 0.1s linear;
+        }
+
+        .progress-bar::-webkit-slider-thumb {
+            appearance: none;
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: var(--pink-primary);
+            box-shadow: 0 0 6px var(--pink-glow);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="music-canvas-bg"></div>
+
+    <!-- ================= 1. LOGIN SCREEN ================= -->
+    <div id="login-screen">
+        <div class="login-box">
+            <div class="logo"><i class="fa-solid fa-compact-disc"></i> Stream<span>Sphere</span></div>
+            <p>Listen without limits. Instant OTP login.</p>
+
+            <form id="email-form">
+                <div class="input-group">
+                    <label><i class="fa-regular fa-envelope"></i> Enter your Email</label>
+                    <input type="email" id="login-email" placeholder="example@gmail.com" required>
+                </div>
+
+                <button type="submit" class="btn-pink" id="send-otp-btn">
+                    <span>Send Verification Code</span> <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+
+            <form id="otp-form" style="display: none;">
+                <label style="font-size: 13px; color: var(--text-muted); display: block; text-align: left;">
+                    Enter the 6-digit code sent to:<br>
+                    <b id="target-email-label" style="color: white;"></b>
+                </label>
+
+                <div class="otp-inputs">
+                    <input type="text" maxlength="1" class="otp-box" required>
+                    <input type="text" maxlength="1" class="otp-box" required>
+                    <input type="text" maxlength="1" class="otp-box" required>
+                    <input type="text" maxlength="1" class="otp-box" required>
+                    <input type="text" maxlength="1" class="otp-box" required>
+                    <input type="text" maxlength="1" class="otp-box" required>
+                </div>
+
+                <button type="submit" class="btn-pink" id="verify-btn">
+                    <span>Verify & Login</span> <i class="fa-solid fa-circle-check"></i>
+                </button>
+                <button type="button" class="btn-link" onclick="backToEmail()">Use another email</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= 2. DASHBOARD ================= -->
+    <div id="app-screen">
+        <aside class="sidebar">
+            <div>
+                <div class="brand"><i class="fa-solid fa-compact-disc"></i> Stream<span>Sphere</span></div>
+                <ul class="nav-links">
+                    <li><a id="nav-home" class="active" onclick="setView('home')"><i class="fa-solid fa-house"></i> Home</a></li>
+                    <li><a id="nav-trending" onclick="setView('trending')"><i class="fa-solid fa-fire"></i> Trending</a></li>
+                    <li><a id="nav-favorites" onclick="setView('favorites')"><i class="fa-solid fa-heart"></i> Favorites</a></li>
+                    <li><a id="nav-playlists" onclick="setView('playlists')"><i class="fa-solid fa-list"></i> Playlists</a></li>
+                </ul>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass" style="color: var(--pink-primary);"></i>
+                    <input type="text" id="search-input" placeholder="Search by song or artist...">
+                </div>
+                <div class="user-profile">
+                    <i class="fa-solid fa-circle-user" style="color: var(--pink-primary); font-size: 20px;"></i>
+                    <span id="display-user">User</span>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 id="library-title">All Songs Library</h2>
+                <button id="create-pl-btn" class="btn-pink" style="width: auto; padding: 8px 16px; font-size: 13px; display: none;" onclick="promptNewPlaylist()">
+                    <i class="fa-solid fa-plus"></i> New Playlist
+                </button>
+            </div>
+
+            <!-- Vertical List Container -->
+            <div class="song-list-view" id="song-container"></div>
+            <div class="playlist-grid" id="playlist-container" style="display: none;"></div>
+        </main>
+
+        <footer class="player-bar">
+            <div class="now-playing">
+                <img id="player-img" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200" alt="cover">
+                <div>
+                    <div class="song-title" id="player-title">Select a song</div>
+                    <div class="song-artist" id="player-artist">Artist</div>
+                </div>
+                <i class="fa-regular fa-heart action-icon" id="player-fav-btn" onclick="togglePlayerFavorite()"></i>
+            </div>
+
+            <div class="player-controls">
+                <div class="control-buttons">
+                    <i class="fa-solid fa-backward-step" onclick="prevSong()"></i>
+                    <i class="fa-solid fa-circle-play play-main" id="master-play" onclick="togglePlay()"></i>
+                    <i class="fa-solid fa-forward-step" onclick="nextSong()"></i>
+                </div>
+                <div class="progress-container">
+                    <span id="curr-time">0:00</span>
+                    <input type="range" class="progress-bar" id="progress-bar" value="0" min="0" max="100">
+                    <span id="total-time">0:00</span>
+                </div>
+            </div>
+
+            <div style="width: 20%; text-align: right; color: var(--pink-primary);">
+                <i class="fa-solid fa-volume-high"></i>
+            </div>
+        </footer>
+    </div>
+
+    <audio id="audio-player"></audio>
+
+    <script>
+        /* ================= 1. FLOATING MUSIC SIGNS ================= */
+        const musicSymbols = ['♪', '♫', '♬', '♩', '𝄞', '♭'];
+        const canvasBg = document.getElementById('music-canvas-bg');
+
+        function createFloatingNote() {
+            if (!canvasBg) return;
+            const note = document.createElement('span');
+            note.className = 'floating-note';
+            note.innerText = musicSymbols[Math.floor(Math.random() * musicSymbols.length)];
+            note.style.left = Math.random() * 95 + 'vw';
+            note.style.fontSize = Math.floor(Math.random() * 8 + 14) + 'px';
+            const duration = parseFloat((Math.random() * 5 + 8).toFixed(2));
+            note.style.animationDuration = duration + 's';
+            canvasBg.appendChild(note);
+            setTimeout(() => { note.remove(); }, duration * 1000);
+        }
+        setInterval(createFloatingNote, 350);
+
+        /* ================= 2. PASSWORDLESS OTP LOGIN ================= */
+        let verifiedUserEmail = "";
+        const emailForm = document.getElementById('email-form');
+        const otpForm = document.getElementById('otp-form');
+        const sendOtpBtn = document.getElementById('send-otp-btn');
+        const verifyBtn = document.getElementById('verify-btn');
+        const otpBoxes = document.querySelectorAll('.otp-box');
+
+        emailForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            if (!email) return;
+
+            sendOtpBtn.disabled = true;
+            sendOtpBtn.innerHTML = `<span>Sending Code...</span> <i class="fa-solid fa-spinner fa-spin"></i>`;
+
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+
+                if (response.ok) {
+                    verifiedUserEmail = email;
+                    document.getElementById('target-email-label').innerText = email;
+                    emailForm.style.display = 'none';
+                    otpForm.style.display = 'block';
+                    otpBoxes[0].focus();
+
+                    Swal.fire({
+                        title: 'StreamSphere',
+                        text: `A 6-digit verification code has been sent to ${email}`,
+                        icon: 'success',
+                        background: '#141418',
+                        color: '#ffffff',
+                        confirmButtonColor: '#ff1e73',
+                        confirmButtonText: 'Got it'
+                    });
+                } else {
+                    const errorMsg = await response.text();
+                    Swal.fire({
+                        title: 'StreamSphere',
+                        text: errorMsg || 'Could not send verification code. Please try again.',
+                        icon: 'error',
+                        background: '#141418',
+                        color: '#ffffff',
+                        confirmButtonColor: '#ff1e73'
+                    });
+                }
+            } catch (err) {
+                Swal.fire({
+                    title: 'StreamSphere',
+                    text: 'Could not connect to Spring Boot server! Ensure backend is running on port 8080.',
+                    icon: 'warning',
+                    background: '#141418',
+                    color: '#ffffff',
+                    confirmButtonColor: '#ff1e73'
+                });
+            } finally {
+                sendOtpBtn.disabled = false;
+                sendOtpBtn.innerHTML = `<span>Send Verification Code</span> <i class="fa-solid fa-paper-plane"></i>`;
+            }
+        });
+
+        otpBoxes.forEach((box, index) => {
+            box.addEventListener('input', (e) => {
+                if (e.target.value.length === 1 && index < otpBoxes.length - 1) {
+                    otpBoxes[index + 1].focus();
+                }
+            });
+            box.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !box.value && index > 0) {
+                    otpBoxes[index - 1].focus();
+                }
+            });
+        });
+
+        otpForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            let enteredOtp = '';
+            otpBoxes.forEach(box => {
+                enteredOtp += box.value.trim();
+            });
+
+            if (enteredOtp.length !== 6) {
+                Swal.fire({
+                    title: 'StreamSphere',
+                    text: 'Please enter the complete 6-digit verification code.',
+                    icon: 'warning',
+                    background: '#141418',
+                    color: '#ffffff',
+                    confirmButtonColor: '#ff1e73'
+                });
+                return;
+            }
+
+            verifyBtn.disabled = true;
+            verifyBtn.innerHTML = `<span>Verifying...</span> <i class="fa-solid fa-spinner fa-spin"></i>`;
+
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: verifiedUserEmail,
+                        otp: enteredOtp
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.verified) {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('app-screen').style.display = 'grid';
+                    document.getElementById('display-user').innerText = (verifiedUserEmail || "Listener").split('@')[0];
+                    setView('home');
+                } else {
+                    Swal.fire({
+                        title: 'StreamSphere',
+                        text: data.message || 'Invalid or expired OTP. Please try again.',
+                        icon: 'error',
+                        background: '#141418',
+                        color: '#ffffff',
+                        confirmButtonColor: '#ff1e73'
+                    });
+                }
+            } catch (err) {
+                Swal.fire({
+                    title: 'StreamSphere',
+                    text: 'Could not connect to Spring Boot server! Ensure backend is running on port 8080.',
+                    icon: 'warning',
+                    background: '#141418',
+                    color: '#ffffff',
+                    confirmButtonColor: '#ff1e73'
+                });
+            } finally {
+                verifyBtn.disabled = false;
+                verifyBtn.innerHTML = `<span>Verify & Login</span> <i class="fa-solid fa-circle-check"></i>`;
+            }
+        });
+
+        function backToEmail() {
+            otpForm.reset();
+            otpForm.style.display = 'none';
+            emailForm.style.display = 'block';
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            audioPlayer.pause();
+            masterPlay.classList.replace('fa-circle-pause', 'fa-circle-play');
+            document.getElementById('app-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+            backToEmail();
+        });
+
+        /* ================= 3. MUSIC PLAYER & LIST-WISE SYSTEM ================= */
+        // SQL DATABASE song
+        let songsDB = [
+            {
+                id: 1,
+                title: "Barbaad",
+                artist: "Jubin Nautiyal",
+                duration: "5:57",
+                audioPath: "./music/Barbaad.mp3",
+                cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400"
+            },
+            {
+                id: 2,
+                title: "Dhun",
+                artist: "Arijit Singh",
+                duration: "4:36",
+                audioPath: "./music/Dhun.mp3",
+                cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400"
+            },
+            {
+                id: 3,
+                title: "Humsafar",
+                artist: "Sachet Tandon, Parampara Tandon",
+                duration: "5:22",
+                audioPath: "./music/Humsafar.mp3",
+                cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400"
+            },
+            {
+                id: 4,
+                title: "Tum Ho Toh",
+                artist: "Vishal Mishra, Hansika Pareek",
+                duration: "5:18",
+                audioPath: "./music/Tum Ho Toh.mp3",
+                cover: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400"
+            },
+            {
+                id: 5,
+                title: "Saiyaara Title Track",
+                artist: "Faheem Abdullah",
+                duration: "6:10",
+                audioPath: "./music/Saiyaara Title Track.mp3",
+                cover: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=400"
+            },
+            {
+                id: 6,
+                title: "Gulabi Aankhen",
+                artist: "Sanam (band)",
+                duration: "3:17",
+                audioPath: "./music/Gulabi Aankhen.mp3",
+                cover: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500&auto=format&fit=crop&q=80"
+            },
+            {
+                id: 7,
+                title: "Hua Hai Aaj Pehli Baar",
+                artist: "Amaal Malik, Palak Muchhal",
+                duration: "5:09",
+                audioPath: "./music/Hua Hai Aaj Pehli Baar.mp3",
+                cover: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=500&auto=format&fit=crop&q=80"
+            },
+            {
+                id: 8,
+                title: "Rehnuma",
+                artist: "Shreya Ghoshal",
+                duration: "4:21",
+                audioPath: "./music/Rehnuma.mp3",
+                cover: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&auto=format&fit=crop&q=80"
+            },
+            {
+                id: 9,
+                title: "Tu Tu Hai Wahi The Royals",
+                artist: "Asha Bhosle, RUUH, JOH, Jubin Nautiyal, Jonita Gandhi",
+                duration: "5:09",
+                audioPath: "./music/Tu Tu Hai Wahi The Royals.mp3",
+                cover: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=500&auto=format&fit=crop&q=80"
+            },
+            {
+                id: 10,
+                title: "Tum Hi Ho",
+                artist: "Arijit Singh",
+                duration: "4:21",
+                audioPath: "./music/Tum Hi Ho.mp3",
+                cover: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=500&auto=format&fit=crop&q=80"
+            }
+        ];
+
+        let currentQueue = [];
+        let currentView = 'home';
+        let activePlaylistName = null;
+
+        let favorites = JSON.parse(localStorage.getItem('streamsphere_favs')) || [];
+        let playlists = JSON.parse(localStorage.getItem('streamsphere_playlists')) || { 'My Mix': [] };
+        let playCounts = JSON.parse(localStorage.getItem('streamsphere_counts')) || {};
+
+        const defaultCover = "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400";
+        let currentSongIndex = 0;
+        const audioPlayer = document.getElementById('audio-player');
+        const masterPlay = document.getElementById('master-play');
+        const progressBar = document.getElementById('progress-bar');
+        const playerFavBtn = document.getElementById('player-fav-btn');
+
+        // Home page view
+        setView('home');
+
+        /* ================= NAVIGATION & VIEWS ================= */
+        function setView(view, plName = null) {
+            currentView = view;
+            activePlaylistName = plName;
+
+            ['nav-home', 'nav-trending', 'nav-favorites', 'nav-playlists'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('active');
+            });
+
+            const songContainer = document.getElementById('song-container');
+            const plContainer = document.getElementById('playlist-container');
+            const title = document.getElementById('library-title');
+            const createPlBtn = document.getElementById('create-pl-btn');
+
+            if (songContainer) songContainer.style.display = 'flex';
+            if (plContainer) plContainer.style.display = 'none';
+            if (createPlBtn) createPlBtn.style.display = 'none';
+
+            if (view === 'home') {
+                const homeNav = document.getElementById('nav-home');
+                if (homeNav) homeNav.classList.add('active');
+                if (title) title.innerText = 'All Songs Library';
+                currentQueue = [...songsDB];
+                renderSongRows(currentQueue);
+            } else if (view === 'trending') {
+                const trNav = document.getElementById('nav-trending');
+                if (trNav) trNav.classList.add('active');
+                if (title) title.innerText = 'Trending Songs 🔥 (Most Played)';
+                currentQueue = [...songsDB].sort((a, b) => (playCounts[b.id] || 0) - (playCounts[a.id] || 0));
+                renderSongRows(currentQueue, true);
+            } else if (view === 'favorites') {
+                const favNav = document.getElementById('nav-favorites');
+                if (favNav) favNav.classList.add('active');
+                if (title) title.innerText = 'Favorites Collection (❤️)';
+                currentQueue = songsDB.filter(s => favorites.includes(s.id));
+                renderSongRows(currentQueue);
+            } else if (view === 'playlists') {
+                const plNav = document.getElementById('nav-playlists');
+                if (plNav) plNav.classList.add('active');
+                if (plName) {
+                    if (title) title.innerText = `Playlist: ${plName}`;
+                    const plIds = playlists[plName] || [];
+                    currentQueue = songsDB.filter(s => plIds.includes(s.id));
+                    renderSongRows(currentQueue);
+                } else {
+                    if (title) title.innerText = 'Your Playlists';
+                    if (createPlBtn) createPlBtn.style.display = 'flex';
+                    if (songContainer) songContainer.style.display = 'none';
+                    if (plContainer) plContainer.style.display = 'grid';
+                    renderPlaylists();
+                }
+            }
+        }
+
+        /* ================= RENDER LIST-WISE SONGS ================= */
+        function renderSongRows(songs, isTrending = false) {
+            const container = document.getElementById('song-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (songs.length === 0) {
+                container.innerHTML = `<p style="color: var(--text-muted); padding: 20px;">No songs found.</p>`;
+                return;
+            }
+
+            songs.forEach((song, idx) => {
+                const isFav = favorites.includes(song.id);
+                const coverImg = song.cover || defaultCover;
+                const playCount = playCounts[song.id] || 0;
+
+                const row = document.createElement('div');
+                row.className = 'song-row';
+                row.onclick = () => playQueueSong(idx);
+
+                row.innerHTML = `
+                    <div class="song-row-left">
+                        <span class="song-index">${isTrending ? '#' + (idx + 1) : idx + 1}</span>
+                        <img src="${coverImg}" class="song-row-thumb" alt="${song.title}">
+                        <div class="song-meta">
+                            <span class="song-title-text">${song.title}</span>
+                            <span class="song-artist-text">${song.artist}</span>
+                        </div>
+                    </div>
+                    <div class="song-row-right">
+                        ${isTrending ? `<span class="trending-badge"><i class="fa-solid fa-fire"></i> ${playCount} plays</span>` : ''}
+                        <i class="fa-solid fa-folder-plus action-icon" title="Add to Playlist" onclick="openPlaylistModal(${song.id}, event)"></i>
+                        <i class="${isFav ? 'fa-solid fa-heart active' : 'fa-regular fa-heart'} action-icon" title="Favorite" onclick="toggleFavorite(${song.id}, event)"></i>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        /* ================= PLAYLIST LOGIC ================= */
+        function renderPlaylists() {
+            const container = document.getElementById('playlist-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const plNames = Object.keys(playlists);
+            if (plNames.length === 0) {
+                container.innerHTML = `<p style="color: var(--text-muted);">No playlists created yet.</p>`;
+                return;
+            }
+
+            plNames.forEach(name => {
+                const count = playlists[name].length;
+                const card = document.createElement('div');
+                card.className = 'playlist-card';
+                card.onclick = () => setView('playlists', name);
+                card.innerHTML = `
+                    <i class="fa-solid fa-compact-disc"></i>
+                    <h3 style="font-size: 16px; margin-bottom: 5px;">${name}</h3>
+                    <p style="font-size: 13px; color: var(--text-muted);">${count} song${count !== 1 ? 's' : ''}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function promptNewPlaylist() {
+            const { value: name } = await Swal.fire({
+                title: 'Create Playlist',
+                input: 'text',
+                inputPlaceholder: 'Enter playlist title...',
+                background: '#141418',
+                color: '#fff',
+                confirmButtonColor: '#ff1e73',
+                showCancelButton: true
+            });
+
+            if (name && name.trim()) {
+                const cleanName = name.trim();
+                if (!playlists[cleanName]) {
+                    playlists[cleanName] = [];
+                    localStorage.setItem('streamsphere_playlists', JSON.stringify(playlists));
+                    renderPlaylists();
+                }
+            }
+        }
+
+        async function openPlaylistModal(songId, event) {
+            event.stopPropagation();
+            const plNames = Object.keys(playlists);
+            
+            const options = {};
+            plNames.forEach(name => { options[name] = name; });
+            options['__new__'] = '➕ Create New Playlist...';
+
+            const { value: selected } = await Swal.fire({
+                title: 'Add to Playlist',
+                input: 'select',
+                inputOptions: options,
+                inputPlaceholder: 'Select a playlist',
+                background: '#141418',
+                color: '#fff',
+                confirmButtonColor: '#ff1e73',
+                showCancelButton: true
+            });
+
+            if (selected === '__new__') {
+                promptNewPlaylist();
+            } else if (selected) {
+                if (!playlists[selected].includes(songId)) {
+                    playlists[selected].push(songId);
+                    localStorage.setItem('streamsphere_playlists', JSON.stringify(playlists));
+                    Swal.fire({
+                        title: 'Added!',
+                        text: `Song added to "${selected}"`,
+                        icon: 'success',
+                        background: '#141418',
+                        color: '#fff',
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Notice',
+                        text: `Song already exists in "${selected}"`,
+                        icon: 'info',
+                        background: '#141418',
+                        color: '#fff',
+                        confirmButtonColor: '#ff1e73'
+                    });
+                }
+            }
+        }
+
+        /* ================= FAVORITES & PLAYER LOGIC ================= */
+        function toggleFavorite(songId, event) {
+            if (event) event.stopPropagation();
+            if (favorites.includes(songId)) {
+                favorites = favorites.filter(id => id !== songId);
+            } else {
+                favorites.push(songId);
+            }
+            localStorage.setItem('streamsphere_favs', JSON.stringify(favorites));
+            setView(currentView, activePlaylistName);
+            updatePlayerFavIcon();
+        }
+
+        function togglePlayerFavorite() {
+            if (!currentQueue || currentQueue.length === 0) return;
+            const curSong = currentQueue[currentSongIndex];
+            if (curSong) {
+                toggleFavorite(curSong.id, null);
+            }
+        }
+
+        function updatePlayerFavIcon() {
+            if (!currentQueue || currentQueue.length === 0 || !playerFavBtn) return;
+            const curSong = currentQueue[currentSongIndex];
+            if (curSong && favorites.includes(curSong.id)) {
+                playerFavBtn.className = 'fa-solid fa-heart active action-icon';
+            } else {
+                playerFavBtn.className = 'fa-regular fa-heart action-icon';
+            }
+        }
+
+        function playQueueSong(idx) {
+            if (!currentQueue || currentQueue.length === 0) return;
+            currentSongIndex = idx;
+            const song = currentQueue[currentSongIndex];
+
+            // Increment play count (Trending calculation)
+            playCounts[song.id] = (playCounts[song.id] || 0) + 1;
+            localStorage.setItem('streamsphere_counts', JSON.stringify(playCounts));
+
+            document.getElementById('player-title').innerText = song.title;
+            document.getElementById('player-artist').innerText = song.artist;
+            document.getElementById('player-img').src = song.cover || defaultCover;
+
+            const audioSrc = song.audioPath || song.audioUrl || song.url;
+            if (audioSrc) {
+                audioPlayer.src = audioSrc;
+                audioPlayer.load();
+                audioPlayer.play().then(() => {
+                    masterPlay.classList.replace('fa-circle-play', 'fa-circle-pause');
+                }).catch(err => {
+                    console.log("Playback error:", err);
+                    masterPlay.classList.replace('fa-circle-pause', 'fa-circle-play');
+                });
+            }
+
+            updatePlayerFavIcon();
+        }
+
+        function togglePlay() {
+            if (!audioPlayer.src) {
+                playQueueSong(0);
+                return;
+            }
+            if (audioPlayer.paused) {
+                audioPlayer.play().then(() => {
+                    masterPlay.classList.replace('fa-circle-play', 'fa-circle-pause');
+                });
+            } else {
+                audioPlayer.pause();
+                masterPlay.classList.replace('fa-circle-pause', 'fa-circle-play');
+            }
+        }
+
+        function nextSong() {
+            if (currentQueue.length === 0) return;
+            currentSongIndex = (currentSongIndex + 1) % currentQueue.length;
+            playQueueSong(currentSongIndex);
+        }
+
+        function prevSong() {
+            if (currentQueue.length === 0) return;
+            currentSongIndex = (currentSongIndex - 1 + currentQueue.length) % currentQueue.length;
+            playQueueSong(currentSongIndex);
+        }
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60) || 0;
+            const s = Math.floor(sec % 60) || 0;
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        function updateProgressStyle(percent) {
+            progressBar.value = percent;
+            progressBar.style.background = `linear-gradient(to right, var(--pink-primary) 0%, var(--pink-primary) ${percent}%, #1e1e24 ${percent}%, #1e1e24 100%)`;
+        }
+
+        audioPlayer.addEventListener('timeupdate', () => {
+            if (audioPlayer.duration) {
+                const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                updateProgressStyle(percent);
+                document.getElementById('curr-time').innerText = formatTime(audioPlayer.currentTime);
+                document.getElementById('total-time').innerText = formatTime(audioPlayer.duration);
+            }
+        });
+
+        progressBar.addEventListener('input', () => {
+            if (audioPlayer.duration) {
+                audioPlayer.currentTime = (progressBar.value * audioPlayer.duration) / 100;
+                updateProgressStyle(progressBar.value);
+            }
+        });
+
+        audioPlayer.addEventListener('ended', nextSong);
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = currentQueue.filter(s => s.title.toLowerCase().includes(term) || s.artist.toLowerCase().includes(term));
+            renderSongRows(filtered, currentView === 'trending');
+        });
+    </script>
+</body>
+</html>
