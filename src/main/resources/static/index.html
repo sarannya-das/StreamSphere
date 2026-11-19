@@ -681,7 +681,7 @@
             sendOtpBtn.innerHTML = `<span>Sending Code...</span> <i class="fa-solid fa-spinner fa-spin"></i>`;
 
             try {
-                const response = await fetch('http://localhost:8080/api/auth/send-otp', {
+                const response = await fetch('/api/auth/send-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: email })
@@ -717,7 +717,7 @@
             } catch (err) {
                 Swal.fire({
                     title: 'StreamSphere',
-                    text: 'Could not connect to Spring Boot server! Ensure backend is running on port 8080.',
+                    text: 'Unable to connect to the server. Please try again later.',
                     icon: 'warning',
                     background: '#141418',
                     color: '#ffffff',
@@ -766,7 +766,7 @@
             verifyBtn.innerHTML = `<span>Verifying...</span> <i class="fa-solid fa-spinner fa-spin"></i>`;
 
             try {
-                const response = await fetch('http://localhost:8080/api/auth/verify-otp', {
+                const response = await fetch('/api/auth/verify-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -795,7 +795,7 @@
             } catch (err) {
                 Swal.fire({
                     title: 'StreamSphere',
-                    text: 'Could not connect to Spring Boot server! Ensure backend is running on port 8080.',
+                    text: 'Unable to connect to the server. Please try again later.',
                     icon: 'warning',
                     background: '#141418',
                     color: '#ffffff',
